@@ -1,103 +1,71 @@
-# 🏥 MedInsight AI — Medical Report Analyzer & Chatbot
+# MedInsight AI
 
-> RAG-powered chatbot that lets you upload medical reports (PDF/text) and ask questions in plain English. Built with LangChain, ChromaDB, and OpenAI GPT-4o.
+I built this after my dad got a bunch of lab reports post-surgery and neither of us could make sense of them. We kept googling every term separately. So I figured — why not just build something that lets you upload the PDF and ask questions directly?
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue) ![LangChain](https://img.shields.io/badge/LangChain-0.2-green) ![Streamlit](https://img.shields.io/badge/Streamlit-1.35-red) ![ChromaDB](https://img.shields.io/badge/ChromaDB-0.5-purple)
+It uses RAG (Retrieval Augmented Generation) — basically it chunks up the report, stores it in a vector DB, and when you ask a question it retrieves the relevant parts and sends them to GPT-4o for an answer. Nothing too fancy but it actually works pretty well on real reports.
 
 ---
 
-## Features
+## What it does
 
-- **Upload** PDF medical reports (blood tests, radiology, discharge summaries)
-- **Ask** natural language questions: *"Is my hemoglobin normal?"*, *"What medications were prescribed?"*
-- **Summarize** entire reports in plain English
-- **Multi-document** support — query across multiple reports simultaneously
-- **Source citations** — see exactly which part of the report the answer came from
-- **Risk Flagging** — highlights abnormal values and suggests follow-up questions
+- Upload one or more medical PDFs (blood tests, discharge summaries, radiology reports, etc.)
+- Ask plain-English questions: *"Is my hemoglobin normal?"*, *"What medications were prescribed?"*
+- Get answers with the exact source highlighted so you can verify
+- Generate a plain-English summary of the whole report
+- Flags values that look abnormal based on standard reference ranges
 
-## Architecture
+## Tech used
 
-```
-User uploads PDF
-      │
-      ▼
- PDF Loader (PyPDF2)
-      │
-      ▼
- Text Chunking (RecursiveCharacterTextSplitter)
-      │
-      ▼
- Embeddings (OpenAI/HuggingFace)
-      │
-      ▼
- ChromaDB (Vector Store)
-      │
-      ▼
- Retriever (MMR Search)
-      │
- User Query ──► LLM (GPT-4o) ──► Answer + Sources
-```
-
-## Tech Stack
-
-| Component | Technology |
-|-----------|-----------|
-| LLM | OpenAI GPT-4o |
-| Framework | LangChain 0.2 |
-| Vector DB | ChromaDB |
-| UI | Streamlit |
-| PDF Processing | PyPDF2, pdfplumber |
-| Embeddings | OpenAI / HuggingFace |
+- Python, Streamlit for the UI
+- LangChain for the RAG pipeline
+- ChromaDB as the vector store
+- OpenAI GPT-4o for answering + embeddings
+- pdfplumber / PyPDF2 for parsing
 
 ## Setup
 
 ```bash
 git clone https://github.com/purnendu1611/medinsight-ai
 cd medinsight-ai
+
 python -m venv venv
-source venv/bin/activate      # Windows: venv\Scripts\activate
+source venv/bin/activate   # Windows: venv\Scripts\activate
+
 pip install -r requirements.txt
-cp .env.example .env          # Add your API keys
+
+cp .env.example .env
+# open .env and paste your OpenAI API key
+
 streamlit run app.py
 ```
 
-## Environment Variables
+Then go to `http://localhost:8501`, upload a PDF, and start asking questions.
 
-```
-OPENAI_API_KEY=your_openai_api_key_here
-```
-
-## Usage
-
-1. Launch the app → open `http://localhost:8501`
-2. Upload one or more PDF medical reports from the sidebar
-3. Click **Process Documents**
-4. Type your question in the chat box
-5. Get AI-powered answers with source citations
-
-## Example Questions
-
-- *"What is the patient's cholesterol level and is it normal?"*
-- *"List all medications mentioned in the report"*
-- *"Are there any critical values I should be aware of?"*
-- *"Summarize the key findings in simple terms"*
-- *"What follow-up tests were recommended?"*
-
-## Project Structure
+## Project structure
 
 ```
 medinsight-ai/
-├── app.py                  # Streamlit UI
-├── rag_pipeline.py         # Core RAG logic
+├── app.py              # Streamlit UI
+├── rag_pipeline.py     # core RAG logic (chunking, embedding, retrieval)
 ├── utils/
-│   ├── pdf_processor.py    # PDF loading & chunking
-│   ├── risk_analyzer.py    # Abnormal value detection
-│   └── prompts.py          # LLM prompt templates
+│   ├── pdf_processor.py
+│   ├── risk_analyzer.py   # reference ranges for common lab values
+│   └── prompts.py
 ├── requirements.txt
-├── .env.example
-└── README.md
+└── .env.example
 ```
 
-## License
+## Known issues / TODO
 
-MIT
+- [ ] Handwritten or scanned PDFs don't parse well — need OCR integration
+- [ ] Reference ranges are hardcoded, should be age/gender aware
+- [ ] Would be nice to add a "compare reports over time" feature
+- [ ] Haven't tested on radiology reports much, mostly works on blood panels
+
+## What I learned
+
+Chunking strategy matters a lot more than I expected. My first version used fixed 500-char chunks and the answers were terrible because lab values would get split across chunks. Switching to sentence-aware splitting with overlap fixed most of it.
+
+---
+
+> **Disclaimer:** This is a personal project for learning. Not a substitute for professional medical advice.

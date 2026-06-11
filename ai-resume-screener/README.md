@@ -1,110 +1,73 @@
-# 🤖 AI Resume Screener — Intelligent Resume Analyzer & JD Matcher
+# AI Resume Screener
 
-> Paste your resume and a job description — get an ATS compatibility score, skill gap analysis, and personalized rewrite suggestions powered by LLMs.
+Built this out of frustration. I was applying to jobs and getting no callbacks, but I had no idea if my resume was even making it past ATS filters. Paid tools charge $30/month for this. I figured I could build something better with GPT-4o in a weekend — and I did.
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue) ![Streamlit](https://img.shields.io/badge/Streamlit-1.35-red) ![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o-green) ![FastAPI](https://img.shields.io/badge/FastAPI-0.110-orange)
+You paste your resume + the job description, and it gives you an ATS compatibility score, tells you exactly which keywords you're missing, and rewrites your weak bullet points with actual impact statements.
 
 ---
 
 ## Features
 
-- **ATS Score (0–100)** — keyword match, format check, section completeness
-- **Skill Gap Analysis** — missing skills vs. job description requirements
-- **Section-by-Section Feedback** — summary, experience, education, skills
-- **Rewrite Suggestions** — AI rewrites weak bullet points to be more impactful
-- **Keyword Optimizer** — extracts must-have keywords from any JD
-- **Multi-JD Comparison** — check your resume against multiple job postings at once
-- **PDF/DOCX support** — upload resume files directly
+- **ATS score (0–100)** — based on keyword match, formatting checks, section completeness
+- **Skill gap analysis** — side-by-side matched vs missing keywords from the JD
+- **Bullet point rewriter** — takes your vague bullets and makes them quantified and impactful
+- **Summary rewriter** — tailors your summary to the specific job
+- **FastAPI backend** — in case you want to plug this into something else
 
-## Architecture
+## Stack
 
-```
-  Resume (PDF/DOCX/Text)          Job Description (Text/URL)
-         │                                   │
-         ▼                                   ▼
-   Resume Parser                       JD Extractor
-  (sections, skills,              (requirements, skills,
-   experience, keywords)           qualifications, keywords)
-         │                                   │
-         └──────────────┬────────────────────┘
-                        ▼
-              LLM Analysis Engine (GPT-4o)
-                        │
-         ┌──────────────┼──────────────┐
-         ▼              ▼              ▼
-     ATS Score    Skill Gaps    Rewrite Suggestions
-```
+- Python, Streamlit (frontend)
+- FastAPI (REST API backend)
+- OpenAI GPT-4o for analysis + rewrites
+- pdfplumber + python-docx for parsing resume files
 
-## Tech Stack
-
-| Component | Technology |
-|-----------|-----------|
-| LLM | OpenAI GPT-4o |
-| Backend | FastAPI |
-| UI | Streamlit |
-| PDF Parsing | pdfplumber, python-docx |
-| NLP | spaCy, sentence-transformers |
-| Scoring | Custom rubric + LLM judge |
-
-## Setup
+## Getting started
 
 ```bash
 git clone https://github.com/purnendu1611/ai-resume-screener
 cd ai-resume-screener
+
 python -m venv venv
 source venv/bin/activate
+
 pip install -r requirements.txt
-cp .env.example .env
-# Add OPENAI_API_KEY to .env
+cp .env.example .env   # add your OPENAI_API_KEY
+
+# run the UI
 streamlit run app.py
+
+# or run the API
+uvicorn api:app --reload
 ```
 
-## API Usage (FastAPI backend)
+## How it works
+
+The resume and JD both get sent to GPT-4o with a structured prompt that asks for JSON output — ATS score, matched/missing keywords, specific feedback per section, and rewritten bullets. I then layer a heuristic format checker on top (checks for action verbs, quantified metrics, section presence) because the LLM alone isn't great at catching formatting issues.
+
+## API example
 
 ```bash
-uvicorn api:app --reload
-
-# Analyze a resume
 curl -X POST http://localhost:8000/analyze \
   -F "resume=@my_resume.pdf" \
-  -F "job_description=We are looking for a Data Scientist with 3+ years..."
+  -F "job_description=We are looking for a Data Scientist..."
 ```
 
-**Response:**
-```json
-{
-  "ats_score": 78,
-  "matched_keywords": ["Python", "Machine Learning", "SQL"],
-  "missing_keywords": ["dbt", "Airflow", "LLMs"],
-  "feedback": {
-    "summary": "Strong background but lacks mention of cloud platforms.",
-    "experience": ["Quantify achievements with metrics", "Add impact statements"],
-    "skills": "Add LLM/GenAI skills to match modern JD requirements"
-  },
-  "rewritten_bullets": [
-    {
-      "original": "Worked on ML models",
-      "improved": "Developed and deployed 5 ML classification models achieving 94% accuracy, reducing manual review time by 40%"
-    }
-  ]
-}
-```
+## TODO
 
-## Project Structure
+- [ ] Add support for LinkedIn job URL (auto-scrape the JD)
+- [ ] Track score history across multiple applications
+- [ ] Better DOCX parsing — tables in Word resumes break things
+- [ ] Add a "cover letter generator" tab
+
+## Project layout
 
 ```
 ai-resume-screener/
-├── app.py                  # Streamlit UI
-├── api.py                  # FastAPI endpoints
-├── analyzer.py             # Core analysis logic
-├── parser.py               # Resume & JD parsing
-├── scorer.py               # ATS scoring rubric
-├── prompts.py              # LLM prompt templates
+├── app.py          # Streamlit UI (5 tabs)
+├── api.py          # FastAPI endpoints
+├── analyzer.py     # GPT-4o analysis logic
+├── parser.py       # PDF/DOCX text extraction
+├── scorer.py       # heuristic ATS checks
 ├── requirements.txt
-├── .env.example
-└── README.md
+└── .env.example
 ```
-
-## License
-
-MIT
