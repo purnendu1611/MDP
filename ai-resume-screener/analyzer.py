@@ -6,16 +6,17 @@ import re
 
 import openai
 
-_CLIENT: openai.OpenAI | None = None
+_client_instance: openai.OpenAI | None = None
 
 
 def _client() -> openai.OpenAI:
-    global _CLIENT
-    if _CLIENT is None:
-        _CLIENT = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-    return _CLIENT
+    global _client_instance
+    if _client_instance is None:
+        _client_instance = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    return _client_instance
 
 
+# The JSON structure GPT needs to fill in — keeping it strict so parsing doesn't break
 ANALYSIS_PROMPT = """\
 You are an expert ATS (Applicant Tracking System) and HR consultant.
 
@@ -51,7 +52,6 @@ Return ONLY valid JSON. No explanation or markdown."""
 
 
 def analyze(resume_text: str, jd_text: str) -> dict:
-    """Analyze the resume against the JD and return structured results."""
     prompt = ANALYSIS_PROMPT.format(resume=resume_text, job_description=jd_text)
     response = _client().chat.completions.create(
         model="gpt-4o",
@@ -59,14 +59,13 @@ def analyze(resume_text: str, jd_text: str) -> dict:
         messages=[{"role": "user", "content": prompt}],
     )
     raw = response.choices[0].message.content.strip()
-    # Strip markdown code fences if present
+    # strip markdown fences if the model wraps it anyway
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
     raw = re.sub(r"\s*```$", "", raw)
     return json.loads(raw)
 
 
 def extract_keywords(jd_text: str) -> list[str]:
-    """Extract top technical and soft-skill keywords from a job description."""
     response = _client().chat.completions.create(
         model="gpt-4o-mini",
         max_tokens=512,
@@ -87,7 +86,6 @@ def extract_keywords(jd_text: str) -> list[str]:
 
 
 def rewrite_summary(current_summary: str, jd_text: str) -> str:
-    """Rewrite the resume summary to better match the JD."""
     response = _client().chat.completions.create(
         model="gpt-4o",
         max_tokens=300,
