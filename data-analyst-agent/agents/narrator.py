@@ -1,4 +1,3 @@
-"""Narrator Agent — converts data analysis results into plain-English insights."""
 from __future__ import annotations
 
 import os
@@ -6,14 +5,14 @@ import os
 import openai
 import pandas as pd
 
-_CLIENT: openai.OpenAI | None = None
+_client_instance: openai.OpenAI | None = None
 
 
 def _client() -> openai.OpenAI:
-    global _CLIENT
-    if _CLIENT is None:
-        _CLIENT = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-    return _CLIENT
+    global _client_instance
+    if _client_instance is None:
+        _client_instance = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    return _client_instance
 
 
 NARRATE_PROMPT = """\
@@ -29,7 +28,6 @@ Narrative:"""
 
 
 def narrate(question: str, result) -> str:
-    """Generate a plain-English explanation of the analysis result."""
     if isinstance(result, pd.DataFrame):
         result_str = result.to_string(max_rows=20)
     elif isinstance(result, pd.Series):

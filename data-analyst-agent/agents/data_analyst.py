@@ -1,4 +1,3 @@
-"""Data Analyst Agent — generates and executes Pandas code to answer queries."""
 from __future__ import annotations
 
 import os
@@ -9,14 +8,14 @@ from io import StringIO
 import openai
 import pandas as pd
 
-_CLIENT: openai.OpenAI | None = None
+_client_instance: openai.OpenAI | None = None
 
 
 def _client() -> openai.OpenAI:
-    global _CLIENT
-    if _CLIENT is None:
-        _CLIENT = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-    return _CLIENT
+    global _client_instance
+    if _client_instance is None:
+        _client_instance = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    return _client_instance
 
 
 CODEGEN_PROMPT = """\
@@ -37,7 +36,6 @@ Rules:
 - `result` can be a DataFrame, Series, scalar, or dict
 - Do NOT import pandas — it is already imported as `pd`
 - Do NOT read any files — `df` is already loaded
-- Handle edge cases (empty results, missing columns)
 
 Python code:"""
 
@@ -49,7 +47,6 @@ def _get_schema(df: pd.DataFrame) -> str:
 
 
 def _extract_code(text: str) -> str:
-    """Extract code block from LLM response."""
     match = re.search(r"```(?:python)?\s*(.*?)```", text, re.DOTALL)
     if match:
         return match.group(1).strip()
@@ -57,7 +54,6 @@ def _extract_code(text: str) -> str:
 
 
 def run(df: pd.DataFrame, question: str) -> dict:
-    """Generate code for the question, execute it, and return result + code."""
     schema = _get_schema(df)
     sample = df.head(3).to_string()
 
@@ -69,7 +65,7 @@ def run(df: pd.DataFrame, question: str) -> dict:
     )
     code = _extract_code(response.choices[0].message.content)
 
-    # Execute code in sandboxed namespace
+    # exec in a restricted namespace — df is read-only copy so queries can't mutate the original
     namespace = {"df": df.copy(), "pd": pd}
     try:
         exec(code, namespace)  # noqa: S102

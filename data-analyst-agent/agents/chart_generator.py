@@ -1,4 +1,3 @@
-"""Chart Generator Agent — decides chart type and builds Plotly figures."""
 from __future__ import annotations
 
 import json
@@ -8,16 +7,15 @@ import re
 import openai
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 
-_CLIENT: openai.OpenAI | None = None
+_client_instance: openai.OpenAI | None = None
 
 
 def _client() -> openai.OpenAI:
-    global _CLIENT
-    if _CLIENT is None:
-        _CLIENT = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-    return _CLIENT
+    global _client_instance
+    if _client_instance is None:
+        _client_instance = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    return _client_instance
 
 
 CHART_PLAN_PROMPT = """\
@@ -34,8 +32,7 @@ Return a JSON object with:
   "x": "<column name or null>",
   "y": "<column name or null>",
   "color": "<column name or null>",
-  "title": "<chart title>",
-  "reason": "<why this chart type>"
+  "title": "<chart title>"
 }}
 
 Return ONLY valid JSON."""
@@ -43,10 +40,7 @@ Return ONLY valid JSON."""
 
 def _plan_chart(question: str, result, df_columns: list[str]) -> dict:
     result_type = type(result).__name__
-    if isinstance(result, (pd.DataFrame, pd.Series)):
-        preview = result.head(5).to_string()
-    else:
-        preview = str(result)[:300]
+    preview = result.head(5).to_string() if isinstance(result, (pd.DataFrame, pd.Series)) else str(result)[:300]
 
     prompt = CHART_PLAN_PROMPT.format(
         question=question,
@@ -66,20 +60,20 @@ def _plan_chart(question: str, result, df_columns: list[str]) -> dict:
 
 
 def build(question: str, result, original_df: pd.DataFrame):
-    """Return a Plotly figure or None if a chart isn't appropriate."""
     if result is None:
         return None
 
-    plan = _plan_chart(question, result, list(original_df.columns))
+    try:
+        plan = _plan_chart(question, result, list(original_df.columns))
+    except Exception:
+        return None
 
     if plan.get("chart_type") == "none":
         return None
 
     data = result if isinstance(result, pd.DataFrame) else original_df
     chart_type = plan.get("chart_type", "bar")
-    x = plan.get("x")
-    y = plan.get("y")
-    color = plan.get("color")
+    x, y, color = plan.get("x"), plan.get("y"), plan.get("color")
     title = plan.get("title", question[:60])
 
     try:
@@ -104,4 +98,5 @@ def build(question: str, result, original_df: pd.DataFrame):
         fig.update_layout(template="plotly_white")
         return fig
     except Exception:
+        # chart building can fail if columns don't match — just skip it
         return None
