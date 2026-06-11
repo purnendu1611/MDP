@@ -3,16 +3,16 @@ from __future__ import annotations
 
 import os
 
-import anthropic
+import openai
 import pandas as pd
 
-_CLIENT: anthropic.Anthropic | None = None
+_CLIENT: openai.OpenAI | None = None
 
 
-def _client() -> anthropic.Anthropic:
+def _client() -> openai.OpenAI:
     global _CLIENT
     if _CLIENT is None:
-        _CLIENT = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+        _CLIENT = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
     return _CLIENT
 
 
@@ -38,9 +38,9 @@ def narrate(question: str, result) -> str:
         result_str = str(result)
 
     prompt = NARRATE_PROMPT.format(question=question, result=result_str[:2000])
-    message = _client().messages.create(
-        model="claude-3-5-haiku-20241022",
+    response = _client().chat.completions.create(
+        model="gpt-4o-mini",
         max_tokens=512,
         messages=[{"role": "user", "content": prompt}],
     )
-    return message.content[0].text.strip()
+    return response.choices[0].message.content.strip()

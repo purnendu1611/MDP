@@ -1,6 +1,6 @@
 # 🏥 MedInsight AI — Medical Report Analyzer & Chatbot
 
-> RAG-powered chatbot that lets you upload medical reports (PDF/text) and ask questions in plain English. Built with LangChain, ChromaDB, and Claude/OpenAI.
+> RAG-powered chatbot that lets you upload medical reports (PDF/text) and ask questions in plain English. Built with LangChain, ChromaDB, and OpenAI GPT-4o.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue) ![LangChain](https://img.shields.io/badge/LangChain-0.2-green) ![Streamlit](https://img.shields.io/badge/Streamlit-1.35-red) ![ChromaDB](https://img.shields.io/badge/ChromaDB-0.5-purple)
 
@@ -35,14 +35,14 @@ User uploads PDF
       ▼
  Retriever (MMR Search)
       │
- User Query ──► LLM (Claude/GPT-4) ──► Answer + Sources
+ User Query ──► LLM (GPT-4o) ──► Answer + Sources
 ```
 
 ## Tech Stack
 
 | Component | Technology |
 |-----------|-----------|
-| LLM | Anthropic Claude / OpenAI GPT-4 |
+| LLM | OpenAI GPT-4o |
 | Framework | LangChain 0.2 |
 | Vector DB | ChromaDB |
 | UI | Streamlit |
@@ -64,9 +64,7 @@ streamlit run app.py
 ## Environment Variables
 
 ```
-ANTHROPIC_API_KEY=your_key_here
-OPENAI_API_KEY=your_key_here        # optional alternative
-LLM_PROVIDER=anthropic              # or "openai"
+OPENAI_API_KEY=your_openai_api_key_here
 ```
 
 ## Usage

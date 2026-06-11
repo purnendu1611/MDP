@@ -15,23 +15,11 @@ from utils.prompts import MEDICAL_QA_PROMPT, SUMMARY_PROMPT
 
 
 def _get_llm():
-    provider = os.getenv("LLM_PROVIDER", "anthropic").lower()
-    if provider == "anthropic":
-        from langchain_anthropic import ChatAnthropic
-        return ChatAnthropic(
-            model="claude-3-5-sonnet-20241022",
-            temperature=0,
-            anthropic_api_key=os.environ["ANTHROPIC_API_KEY"],
-        )
     from langchain_openai import ChatOpenAI
     return ChatOpenAI(model="gpt-4o", temperature=0)
 
 
 def _get_embeddings():
-    provider = os.getenv("LLM_PROVIDER", "anthropic").lower()
-    if provider == "anthropic":
-        from langchain_huggingface import HuggingFaceEmbeddings
-        return HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     from langchain_openai import OpenAIEmbeddings
     return OpenAIEmbeddings()
 

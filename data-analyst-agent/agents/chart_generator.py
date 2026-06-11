@@ -5,18 +5,18 @@ import json
 import os
 import re
 
-import anthropic
+import openai
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-_CLIENT: anthropic.Anthropic | None = None
+_CLIENT: openai.OpenAI | None = None
 
 
-def _client() -> anthropic.Anthropic:
+def _client() -> openai.OpenAI:
     global _CLIENT
     if _CLIENT is None:
-        _CLIENT = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+        _CLIENT = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
     return _CLIENT
 
 
@@ -54,12 +54,12 @@ def _plan_chart(question: str, result, df_columns: list[str]) -> dict:
         preview=preview,
         columns=", ".join(df_columns),
     )
-    message = _client().messages.create(
-        model="claude-3-5-haiku-20241022",
+    response = _client().chat.completions.create(
+        model="gpt-4o-mini",
         max_tokens=256,
         messages=[{"role": "user", "content": prompt}],
     )
-    raw = message.content[0].text.strip()
+    raw = response.choices[0].message.content.strip()
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
     raw = re.sub(r"\s*```$", "", raw)
     return json.loads(raw)

@@ -2,7 +2,7 @@
 
 > Paste your resume and a job description — get an ATS compatibility score, skill gap analysis, and personalized rewrite suggestions powered by LLMs.
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue) ![Streamlit](https://img.shields.io/badge/Streamlit-1.35-red) ![Anthropic](https://img.shields.io/badge/Claude-3.5-orange) ![FastAPI](https://img.shields.io/badge/FastAPI-0.110-green)
+![Python](https://img.shields.io/badge/Python-3.10+-blue) ![Streamlit](https://img.shields.io/badge/Streamlit-1.35-red) ![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o-green) ![FastAPI](https://img.shields.io/badge/FastAPI-0.110-orange)
 
 ---
 
@@ -28,7 +28,7 @@
          │                                   │
          └──────────────┬────────────────────┘
                         ▼
-              LLM Analysis Engine (Claude)
+              LLM Analysis Engine (GPT-4o)
                         │
          ┌──────────────┼──────────────┐
          ▼              ▼              ▼
@@ -39,7 +39,7 @@
 
 | Component | Technology |
 |-----------|-----------|
-| LLM | Anthropic Claude 3.5 Sonnet |
+| LLM | OpenAI GPT-4o |
 | Backend | FastAPI |
 | UI | Streamlit |
 | PDF Parsing | pdfplumber, python-docx |
@@ -55,7 +55,7 @@ python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-# Add ANTHROPIC_API_KEY to .env
+# Add OPENAI_API_KEY to .env
 streamlit run app.py
 ```
 

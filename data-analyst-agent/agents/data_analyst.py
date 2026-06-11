@@ -6,16 +6,16 @@ import re
 import traceback
 from io import StringIO
 
-import anthropic
+import openai
 import pandas as pd
 
-_CLIENT: anthropic.Anthropic | None = None
+_CLIENT: openai.OpenAI | None = None
 
 
-def _client() -> anthropic.Anthropic:
+def _client() -> openai.OpenAI:
     global _CLIENT
     if _CLIENT is None:
-        _CLIENT = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+        _CLIENT = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
     return _CLIENT
 
 
@@ -62,12 +62,12 @@ def run(df: pd.DataFrame, question: str) -> dict:
     sample = df.head(3).to_string()
 
     prompt = CODEGEN_PROMPT.format(schema=schema, sample=sample, question=question)
-    message = _client().messages.create(
-        model="claude-3-5-sonnet-20241022",
+    response = _client().chat.completions.create(
+        model="gpt-4o",
         max_tokens=1024,
         messages=[{"role": "user", "content": prompt}],
     )
-    code = _extract_code(message.content[0].text)
+    code = _extract_code(response.choices[0].message.content)
 
     # Execute code in sandboxed namespace
     namespace = {"df": df.copy(), "pd": pd}

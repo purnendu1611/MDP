@@ -48,7 +48,7 @@ User Query
 
 | Component | Technology |
 |-----------|-----------|
-| LLM | Anthropic Claude 3.5 / OpenAI GPT-4o |
+| LLM | OpenAI GPT-4o / GPT-4o-mini |
 | Agent Framework | LangChain Agents + custom orchestrator |
 | Data Processing | Pandas, NumPy |
 | Visualization | Plotly, Matplotlib |
